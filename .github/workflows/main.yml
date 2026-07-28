@@ -1,0 +1,26 @@
+name: CI — content validation
+on:
+  push:
+    branches: [ main, init/project-structure ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    name: Lint Markdown & Basic Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Super-Linter (Markdown)
+        uses: github/super-linter@v4
+        env:
+          VALIDATE_MARKDOWN: true
+          VALIDATE_YAML: true
+          DEFAULT_BRANCH: main
+
+      - name: Basic repo checks
+        run: |
+          echo "Files present:"
+          ls -la

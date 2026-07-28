@@ -1,0 +1,6 @@
+# Basic ignores
+.DS_Store
+node_modules/
+.env
+.vscode/
+__pycache__/
