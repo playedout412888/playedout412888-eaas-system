@@ -1,0 +1,46 @@
+name: Control Plane Audit
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 13 * * *'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: control-plane-audit
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate control-plane registry
+        run: |
+          test -f control-plane/README.md
+          test -f control-plane/commands.json
+          python - <<'PY'
+          import json
+          with open('control-plane/commands.json', encoding='utf-8') as f:
+              data = json.load(f)
+          required = {'run ai ops', 'build feature', 'fix', 'deploy', 'daily audit'}
+          actual = {x['name'] for x in data['commands']}
+          missing = required - actual
+          if missing:
+              raise SystemExit(f'Missing commands: {sorted(missing)}')
+          print(f'Validated {len(actual)} commands')
+          PY
+
+      - name: Repository health summary
+        run: |
+          echo "branch=${GITHUB_REF_NAME}"
+          echo "sha=${GITHUB_SHA}"
+          git status --short
