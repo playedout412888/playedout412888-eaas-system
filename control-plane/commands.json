@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "commands": [
+    {"name":"run ai ops","mode":"audit","schedule_capable":true},
+    {"name":"build feature","mode":"plan_execute","schedule_capable":false},
+    {"name":"fix","mode":"repair","schedule_capable":false},
+    {"name":"deploy","mode":"deploy","schedule_capable":false},
+    {"name":"daily audit","mode":"audit","schedule_capable":true}
+  ],
+  "sources": ["siri", "chat", "webhook", "schedule"],
+  "targets": ["github", "vercel", "database", "external_api"]
+}
