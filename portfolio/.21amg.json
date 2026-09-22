@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "organization": "21amG",
+  "controller": "Nexus",
+  "application": "21amG Developer Portfolio",
+  "repository": "playedout412888/playedout412888-eaas-system",
+  "path": "portfolio/",
+  "relationship": "descendant_application",
+  "provenance": "PLANNED implementation created in this repository branch; factual project states shown in UI are explicitly classified",
+  "production_authority": "explicit_authorization_required"
+}
