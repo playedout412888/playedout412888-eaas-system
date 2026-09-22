@@ -27,20 +27,41 @@ jobs:
         run: |
           test -f control-plane/README.md
           test -f control-plane/commands.json
+          test -f control-plane/registry.json
+          test -f control-plane/events.schema.json
+          test -f control-plane/architecture.md
+          test -f control-plane/BUILD_ALIGNMENT.md
+          test -f .21amg/identity.json
+          test -f .21amg/lineage.json
+          test -f .21amg/capabilities.json
+          test -f .21amg/dependencies.json
+          test -f .21amg/ownership.json
+          test -f .21amg/nexus.json
           python - <<'PY'
           import json
-          with open('control-plane/commands.json', encoding='utf-8') as f:
-              data = json.load(f)
+          from pathlib import Path
           required = {'run ai ops', 'build feature', 'fix', 'deploy', 'daily audit'}
-          actual = {x['name'] for x in data['commands']}
+          commands = json.loads(Path('control-plane/commands.json').read_text())
+          actual = {x['name'] for x in commands['commands']}
           missing = required - actual
           if missing:
               raise SystemExit(f'Missing commands: {sorted(missing)}')
-          print(f'Validated {len(actual)} commands')
+          for path in [
+              'control-plane/registry.json',
+              'control-plane/events.schema.json',
+              '.21amg/identity.json',
+              '.21amg/lineage.json',
+              '.21amg/capabilities.json',
+              '.21amg/dependencies.json',
+              '.21amg/ownership.json',
+              '.21amg/nexus.json'
+          ]:
+              json.loads(Path(path).read_text())
+          print(f'Validated {len(actual)} commands and Nexus metadata')
           PY
 
       - name: Repository health summary
         run: |
-          echo "branch=${GITHUB_REF_NAME}"
-          echo "sha=${GITHUB_SHA}"
+          echo "branch=$GITHUB_REF_NAME"
+          echo "sha=$GITHUB_SHA"
           git status --short
