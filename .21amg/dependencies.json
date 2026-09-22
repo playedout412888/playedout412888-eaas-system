@@ -1,0 +1,7 @@
+{
+  "schema_version": "1.0",
+  "runtime": ["github-actions"],
+  "integrations": ["github","vercel"],
+  "planned_integrations": ["mcp","api-providers","supabase","neon","redis","runable"],
+  "dependency_policy": "least_privilege_and_explicit_authorization"
+}
