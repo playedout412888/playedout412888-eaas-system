@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "capabilities": [
+    {"id":"ai-ops","status":"verified","source":"control-plane/commands.json"},
+    {"id":"feature-build","status":"verified","source":"control-plane/commands.json"},
+    {"id":"repair","status":"verified","source":"control-plane/commands.json"},
+    {"id":"deployment-orchestration","status":"verified","source":"control-plane/commands.json"},
+    {"id":"scheduled-audit","status":"verified","source":"control-plane/commands.json"},
+    {"id":"voice-command-intake","status":"planned","source":"control-plane/README.md"},
+    {"id":"agent-orchestration","status":"planned","source":"platform architecture"},
+    {"id":"event-coordination","status":"planned","source":"platform architecture"},
+    {"id":"memory-and-provenance","status":"planned","source":"platform architecture"},
+    {"id":"mcp-api-provider-routing","status":"planned","source":"platform architecture"}
+  ]
+}
