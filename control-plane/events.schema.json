@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://21amg.local/schemas/nexus-event-v1.json",
+  "title": "21amG Nexus Event",
+  "type": "object",
+  "required": ["event_id","event_type","occurred_at","source","target","mode","provenance"],
+  "properties": {
+    "event_id": {"type":"string"},
+    "event_type": {"type":"string"},
+    "occurred_at": {"type":"string","format":"date-time"},
+    "source": {"type":"string"},
+    "target": {"type":"string"},
+    "mode": {"enum":["observe","plan","execute","repair","deploy","audit"]},
+    "request_id": {"type":"string"},
+    "actor": {"type":"string"},
+    "capabilities": {"type":"array","items":{"type":"string"}},
+    "payload": {"type":"object"},
+    "authorization": {
+      "type":"object",
+      "required":["required","granted"],
+      "properties":{"required":{"type":"boolean"},"granted":{"type":"boolean"}}
+    },
+    "provenance": {
+      "type":"object",
+      "required":["class","source"],
+      "properties":{
+        "class":{"enum":["VERIFIED","DERIVED","RECOVERED","PLANNED","UNKNOWN","ILLUSTRATIVE"]},
+        "source":{"type":"string"}
+      }
+    }
+  }
+}
