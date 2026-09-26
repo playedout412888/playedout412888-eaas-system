@@ -18,7 +18,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: control-plane-audit
+  group: control-plane-audit-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -52,4 +52,3 @@ jobs:
           echo "branch=${GITHUB_REF_NAME}"
           echo "sha=${GITHUB_SHA}"
           git status --short
-# PR CI repair synchronized with main control-plane workflow.
