@@ -42,8 +42,8 @@ jobs:
         run: |
           test -f package-lock.json
           BLOB_SHA=$(git hash-object -w package-lock.json)
-          git update-index --add --cacheinfo 100644,$BLOB_SHA,portfolio/package-lock.json
-          git status --short -- portfolio/package-lock.json
+          git update-index --add --cacheinfo 100644,$BLOB_SHA,package-lock.json
+          git status --short -- package-lock.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "chore(portfolio): add npm lockfile"
