@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "registry": {
+    "organizations": ["21amG"],
+    "controllers": ["Nexus"],
+    "repositories": ["playedout412888/playedout412888-eaas-system"],
+    "applications": [],
+    "components": ["EaaS Control Plane"],
+    "agents": [],
+    "skills": [],
+    "workflows": ["run ai ops","build feature","fix","deploy","daily audit"],
+    "events": [],
+    "integrations": ["github","vercel"],
+    "deployments": [],
+    "environments": ["github-actions"]
+  },
+  "inventory_policy": "only populate observed objects as VERIFIED; historical conversation objects require RECOVERED evidence"
+}

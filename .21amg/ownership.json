@@ -1,0 +1,7 @@
+{
+  "schema_version": "1.0",
+  "origin": "21amG",
+  "platform_controller": "Nexus",
+  "repository_owner": "playedout412888",
+  "operational_rule": "repository_changes are proposed through branches and pull requests; production-impacting changes require explicit authorization"
+}

@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "controller": "Nexus",
+  "orchestration": true,
+  "event_driven": true,
+  "agent_access": true,
+  "registry": true,
+  "lineage_tracking": true,
+  "provenance_tracking": true,
+  "policy_gate": true,
+  "verification_gate": true,
+  "human_approval_for_production": true
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "root": "21amG",
+  "brain": "Nexus",
+  "repository": "playedout412888/playedout412888-eaas-system",
+  "component": "EaaS Control Plane",
+  "relationship": "platform_control_plane",
+  "descendants": [
+    "Runable",
+    "agent_systems",
+    "execution",
+    "memory",
+    "event_bus",
+    "integrations",
+    "application_capabilities"
+  ],
+  "provenance_rule": "verified_repository_evidence_overrides_planned_or_illustrative_state"
+}
