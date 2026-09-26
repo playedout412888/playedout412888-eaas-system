@@ -29,6 +29,15 @@ jobs:
       - name: Generate lockfile
         run: npm install --package-lock-only --package-lock=true --ignore-scripts --no-audit --no-fund
 
+      - name: Diagnose npm lockfile state
+        run: |
+          echo "package-lock setting:"
+          npm config get package-lock
+          echo "files:"
+          ls -la
+          echo "lockfile:"
+          ls -la package-lock.json || true
+
       - name: Commit lockfile
         run: |
           test -f package-lock.json
