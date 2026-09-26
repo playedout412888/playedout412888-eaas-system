@@ -18,7 +18,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: control-plane-audit
+  group: control-plane-audit-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
