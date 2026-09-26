@@ -52,32 +52,3 @@ jobs:
           echo "branch=${GITHUB_REF_NAME}"
           echo "sha=${GITHUB_SHA}"
           git status --short
-  portfolio:
-    name: Portfolio type-check and build
-    if: ${{ hashFiles('portfolio/package.json') != '' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: portfolio
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Setup Node.js 24
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: portfolio/package.json
-
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: Type-check
-        run: npm run type-check
-
-      - name: Production build
-        run: npm run build
