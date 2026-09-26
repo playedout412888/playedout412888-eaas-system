@@ -27,7 +27,7 @@ jobs:
           node-version: 24
 
       - name: Generate lockfile
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+        run: npm install --package-lock-only --package-lock=true --ignore-scripts --no-audit --no-fund
 
       - name: Commit lockfile
         run: |
@@ -40,3 +40,5 @@ jobs:
           git push
 
 # repair verification trigger
+
+# force lockfile generation verification
