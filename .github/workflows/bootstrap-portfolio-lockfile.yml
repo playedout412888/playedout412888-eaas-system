@@ -50,3 +50,5 @@ jobs:
           git push
 
 # direct-index verification trigger
+
+# final path verification
