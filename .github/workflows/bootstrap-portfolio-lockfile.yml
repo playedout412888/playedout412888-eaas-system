@@ -38,16 +38,36 @@ jobs:
           echo "lockfile:"
           ls -la package-lock.json || true
 
-      - name: Commit lockfile
+      - name: Commit lockfile through GitHub API
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
         run: |
-          test -f package-lock.json
-          git add -f package-lock.json
-          git status --short -- package-lock.json
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore(portfolio): add npm lockfile"
-          git push
-
-# repair verification trigger
-
-# force lockfile generation verification
+          python - <<'PY'
+          import base64, json, os, urllib.request
+          path = "portfolio/package-lock.json"
+          with open("package-lock.json", "rb") as f:
+              encoded = base64.b64encode(f.read()).decode()
+          url = f"https://api.github.com/repos/{os.environ['REPO']}/contents/{path}"
+          payload = json.dumps({
+              "message": "chore(portfolio): add npm lockfile",
+              "content": encoded,
+              "branch": os.environ["BRANCH"]
+          }).encode()
+          req = urllib.request.Request(
+              url,
+              data=payload,
+              method="PUT",
+              headers={
+                  "Authorization": f"Bearer {os.environ['GH_TOKEN']}",
+                  "Accept": "application/vnd.github+json",
+                  "X-GitHub-Api-Version": "2022-11-28",
+                  "Content-Type": "application/json"
+              }
+          )
+          with urllib.request.urlopen(req) as resp:
+              result = json.load(resp)
+          print(result["content"]["path"])
+          print(result["commit"]["sha"])
+          PY
