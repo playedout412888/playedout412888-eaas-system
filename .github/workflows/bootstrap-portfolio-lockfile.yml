@@ -38,3 +38,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "chore(portfolio): add npm lockfile"
           git push
+
+# repair verification trigger
