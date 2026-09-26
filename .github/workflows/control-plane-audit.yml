@@ -52,3 +52,4 @@ jobs:
           echo "branch=${GITHUB_REF_NAME}"
           echo "sha=${GITHUB_SHA}"
           git status --short
+# PR CI repair synchronized with main control-plane workflow.
