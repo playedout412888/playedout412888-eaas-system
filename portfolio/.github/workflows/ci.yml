@@ -1,0 +1,33 @@
+name: 21amG Portfolio CI
+
+on:
+  push:
+    branches: [feat/21amg-developer-portfolio]
+    paths: ["portfolio/**"]
+  pull_request:
+    paths: ["portfolio/**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portfolio-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: portfolio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: portfolio/package-lock.json
+      - run: npm install --no-audit --no-fund
+      - run: npm run type-check
+      - run: npm run build
