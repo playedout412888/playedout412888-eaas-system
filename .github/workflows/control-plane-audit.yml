@@ -47,11 +47,23 @@ jobs:
           print(f'Validated {len(actual)} commands')
           PY
 
-      - name: Validate Shortcut Library foundation
-        run: python shortcut-library/tools/audit_library.py
+      - name: Run Daily Ops Audit and generate evidence
+        id: daily-ops-audit
+        run: python control-plane/daily_ops_audit.py
+
+      - name: Upload Daily Ops Audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-ops-audit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/daily-ops-audit/
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Repository health summary
+        if: always()
         run: |
           echo "branch=${GITHUB_REF_NAME}"
           echo "sha=${GITHUB_SHA}"
+          echo "run_id=${GITHUB_RUN_ID}"
           git status --short
