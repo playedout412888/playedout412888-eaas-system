@@ -12,9 +12,12 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT_DIR = ROOT / "reports" / "daily-ops-audit"
+TARGETS_PATH = ROOT / "control-plane" / "audit-targets.json"
 EXPECTED_COMMANDS = {"run ai ops", "build feature", "fix", "deploy", "daily audit"}
 
 
@@ -106,7 +109,123 @@ def main() -> int:
         f"required_count={len(required_files)}; missing={missing_files}",
     ))
 
-    failures = [item for item in checks if item["status"] == "FAIL"]
+    # Portfolio checks are read-only. Inaccessible/private repositories are WARN,
+    # not silently treated as healthy. Only recent, latest-per-workflow failures
+    # are blocking; a repo with no Actions history is explicitly reported.
+    portfolio_summary = {"configured": 0, "reachable": 0, "workflow_failures": 0, "without_workflow_history": 0}
+    try:
+        target_config = json.loads(TARGETS_PATH.read_text(encoding="utf-8"))
+        targets = target_config.get("repositories", [])
+        portfolio_summary["configured"] = len(targets)
+    except (OSError, json.JSONDecodeError, AttributeError, TypeError) as exc:
+        targets = []
+        checks.append(check("portfolio-config", "Repository portfolio configuration is valid", False, f"{type(exc).__name__}: {exc}"))
+
+    token = os.getenv("GITHUB_TOKEN", "")
+    api_headers = {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "21amG-Daily-Ops-Audit",
+    }
+    if token:
+        api_headers["Authorization"] = f"Bearer {token}"
+
+    def github_get(api_path: str):
+        request = Request("https://api.github.com" + api_path, headers=api_headers)
+        with urlopen(request, timeout=12) as response:
+            return json.loads(response.read().decode("utf-8"))
+
+    if targets:
+        for target in targets:
+            full_name = target.get("full_name", "")
+            if "/" not in full_name:
+                checks.append(check("portfolio-target", "Portfolio target has owner/repository format", False, f"invalid_target={full_name}"))
+                continue
+            try:
+                repo_info = github_get(f"/repos/{full_name}")
+                portfolio_summary["reachable"] += 1
+                pulls = github_get(f"/repos/{full_name}/pulls?state=open&per_page=100")
+                default_branch = repo_info.get("default_branch", "unknown")
+                checks.append(check(
+                    f"repo:{full_name}:reachable",
+                    f"Repository is readable and default branch is known ({target.get('role', 'unspecified')})",
+                    bool(default_branch),
+                    f"default_branch={default_branch}; visibility={repo_info.get('visibility', 'unknown')}; open_prs={len(pulls) if isinstance(pulls, list) else 'unknown'}",
+                ))
+            except (HTTPError, URLError, TimeoutError, json.JSONDecodeError, OSError) as exc:
+                code = getattr(exc, "code", None)
+                checks.append(check(
+                    f"repo:{full_name}:reachable",
+                    f"Repository is readable ({target.get('role', 'unspecified')})",
+                    False,
+                    f"api_error={code or type(exc).__name__}; details={str(exc)[:240]}; may indicate permissions, rate limit, network, or missing repository",
+                    severity="WARN",
+                ))
+                continue
+
+            try:
+                payload = github_get(f"/repos/{full_name}/actions/runs?per_page=30")
+                runs = payload.get("workflow_runs", []) if isinstance(payload, dict) else []
+                latest_by_workflow = {}
+                for run in runs:
+                    workflow_id = run.get("workflow_id", run.get("name", "unknown"))
+                    if workflow_id not in latest_by_workflow:
+                        latest_by_workflow[workflow_id] = run
+                if not latest_by_workflow:
+                    portfolio_summary["without_workflow_history"] += 1
+                    checks.append(check(
+                        f"repo:{full_name}:actions",
+                        "Recent GitHub Actions health is observable",
+                        False,
+                        "No workflow runs returned; CI health is unknown, not assumed healthy",
+                        severity="WARN",
+                    ))
+                    continue
+
+                now_utc = datetime.now(timezone.utc)
+                recent_failures = []
+                recent_unknown = []
+                for run in latest_by_workflow.values():
+                    created = run.get("created_at")
+                    try:
+                        age_days = (now_utc - datetime.fromisoformat(created.replace("Z", "+00:00"))).total_seconds() / 86400
+                    except (AttributeError, ValueError):
+                        age_days = 9999
+                    conclusion = run.get("conclusion")
+                    if age_days <= 7 and conclusion in {"failure", "timed_out", "action_required"}:
+                        recent_failures.append({
+                            "workflow": run.get("name"),
+                            "conclusion": conclusion,
+                            "created_at": created,
+                            "url": run.get("html_url"),
+                        })
+                    elif age_days <= 7 and run.get("status") == "completed" and conclusion not in {"success", "skipped", "neutral", "cancelled"}:
+                        recent_unknown.append({"workflow": run.get("name"), "conclusion": conclusion, "created_at": created})
+                if recent_failures:
+                    portfolio_summary["workflow_failures"] += len(recent_failures)
+                evidence = (
+                    f"latest_workflows_checked={len(latest_by_workflow)}; "
+                    f"recent_failures={json.dumps(recent_failures, separators=(',', ':'))}; "
+                    f"recent_unknown={json.dumps(recent_unknown, separators=(',', ':'))}"
+                )
+                checks.append(check(
+                    f"repo:{full_name}:actions",
+                    "Latest-per-workflow GitHub Actions results are healthy over the last 7 days",
+                    not recent_failures and not recent_unknown,
+                    evidence,
+                    severity="FAIL" if recent_failures else "WARN",
+                ))
+            except (HTTPError, URLError, TimeoutError, json.JSONDecodeError, OSError) as exc:
+                code = getattr(exc, "code", None)
+                checks.append(check(
+                    f"repo:{full_name}:actions",
+                    "GitHub Actions health is readable",
+                    False,
+                    f"api_error={code or type(exc).__name__}; details={str(exc)[:240]}",
+                    severity="WARN",
+                ))
+
+        failures = [item for item in checks if item["status"] == "FAIL"]
     warnings = [item for item in checks if item["status"] == "WARN"]
     result = {
         "schema_version": "1.0.0",
@@ -122,6 +241,7 @@ def main() -> int:
             "run_attempt": os.getenv("GITHUB_RUN_ATTEMPT", "1"),
             "server_url": os.getenv("GITHUB_SERVER_URL", "https://github.com"),
         },
+        "portfolio": portfolio_summary,
         "summary": {
             "checks_total": len(checks),
             "passed": sum(item["status"] == "PASS" for item in checks),
