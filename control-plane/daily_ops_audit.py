@@ -123,6 +123,14 @@ def main() -> int:
 
     dedicated_audit_token = os.getenv("AUDIT_GITHUB_TOKEN", "")
     token = dedicated_audit_token or os.getenv("GITHUB_TOKEN", "")
+    target_names = [item.get("full_name", "") for item in targets if isinstance(item, dict)]
+    target_config_valid = bool(targets) and len(target_names) == len(targets) and len(target_names) == len(set(target_names)) and all("/" in name for name in target_names)
+    checks.append(check(
+        "portfolio-config",
+        "Portfolio target list is non-empty, well-formed, and unique",
+        target_config_valid,
+        f"target_count={len(targets)}; unique_count={len(set(target_names))}; invalid_entries={len(targets) - len(target_names)}",
+    ))
     api_headers = {
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
