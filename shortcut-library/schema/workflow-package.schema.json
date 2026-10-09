@@ -1,0 +1,402 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:21amg:schema:workflow-package:1.0.0",
+  "title": "21amG Workflow Package Manifest",
+  "description": "Manifest contract for reusable Shortcut and helper-workflow packages. This schema does not certify an artifact or its test status.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "name",
+    "version",
+    "summary",
+    "lifecycle",
+    "maintainer",
+    "workflow",
+    "compatibility",
+    "permissions",
+    "dependencies",
+    "validation",
+    "distribution"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 10
+    },
+    "industry_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "lifecycle": {
+      "enum": [
+        "proposed",
+        "specified",
+        "implemented",
+        "tested",
+        "release-candidate",
+        "released",
+        "blocked",
+        "deprecated",
+        "withdrawn"
+      ]
+    },
+    "maintainer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "team",
+        "contact_route"
+      ],
+      "properties": {
+        "team": {
+          "type": "string"
+        },
+        "contact_route": {
+          "type": "string"
+        },
+        "support_tier": {
+          "enum": [
+            "community",
+            "standard",
+            "enterprise",
+            "internal"
+          ]
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entrypoint",
+        "helpers",
+        "input_contract",
+        "output_contract"
+      ],
+      "properties": {
+        "entrypoint": {
+          "type": "string"
+        },
+        "helpers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "input_contract": {
+          "type": "string"
+        },
+        "output_contract": {
+          "type": "string"
+        },
+        "idempotency_strategy": {
+          "type": "string"
+        },
+        "checkpoint_strategy": {
+          "type": "string"
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platforms",
+        "minimum_versions",
+        "execution_requirements"
+      ],
+      "properties": {
+        "platforms": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "apple-shortcuts",
+              "ios",
+              "ipados",
+              "macos",
+              "windows",
+              "linux",
+              "android",
+              "browser-extension",
+              "vscode",
+              "jetbrains",
+              "cli",
+              "rest-api",
+              "mcp-client",
+              "mcp-server",
+              "github-actions",
+              "other"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "minimum_versions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "frameworks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "execution_requirements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filesystem",
+        "network",
+        "secrets",
+        "external_side_effects",
+        "approval_required"
+      ],
+      "properties": {
+        "filesystem": {
+          "enum": [
+            "none",
+            "read-only",
+            "scoped-write",
+            "unrestricted"
+          ]
+        },
+        "network": {
+          "enum": [
+            "none",
+            "allowlisted",
+            "unrestricted"
+          ]
+        },
+        "secrets": {
+          "enum": [
+            "none",
+            "runtime-reference-only",
+            "scoped-credential-provider"
+          ]
+        },
+        "external_side_effects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "approval_required": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "kind",
+          "constraint"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "runtime",
+              "workflow",
+              "service",
+              "account",
+              "native-app",
+              "system-tool",
+              "model-provider",
+              "other"
+            ]
+          },
+          "constraint": {
+            "type": "string"
+          },
+          "optional": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "purpose",
+          "required"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "secret_reference_only": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "test_suites",
+        "evidence"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "not-run",
+            "failing",
+            "partial",
+            "passed",
+            "blocked"
+          ]
+        },
+        "test_suites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type",
+              "reference",
+              "timestamp"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "test-report",
+                  "build-report",
+                  "security-review",
+                  "install-test",
+                  "manual-review",
+                  "compatibility-matrix",
+                  "checksum",
+                  "other"
+                ]
+              },
+              "reference": {
+                "type": "string"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "notes": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "known_limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "distribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "targets",
+        "artifact_paths",
+        "license_id"
+      ],
+      "properties": {
+        "targets": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "internal",
+              "individual",
+              "commercial",
+              "enterprise"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "artifact_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "license_id": {
+          "type": "string"
+        },
+        "catalog_visibility": {
+          "enum": [
+            "internal",
+            "private-customer",
+            "public"
+          ]
+        },
+        "price_id": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
