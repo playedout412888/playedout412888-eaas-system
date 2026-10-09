@@ -52,6 +52,7 @@ jobs:
         id: daily-ops-audit
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AUDIT_GITHUB_TOKEN: ${{ secrets.AUDIT_GITHUB_TOKEN }}
         run: python control-plane/daily_ops_audit.py
 
       - name: Upload Daily Ops Audit report
