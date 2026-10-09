@@ -81,6 +81,7 @@ def main() -> int:
             "daily_schedule": "schedule:",
             "pull_request_validation": "pull_request:",
             "report_artifact": "upload-artifact",
+            "portfolio_secret": "AUDIT_GITHUB_TOKEN:",
         }
         absent = [label for label, marker in required_markers.items() if marker not in workflow_text]
         checks.append(check(
