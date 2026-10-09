@@ -121,7 +121,8 @@ def main() -> int:
         targets = []
         checks.append(check("portfolio-config", "Repository portfolio configuration is valid", False, f"{type(exc).__name__}: {exc}"))
 
-    token = os.getenv("AUDIT_GITHUB_TOKEN") or os.getenv("GITHUB_TOKEN", "")
+    dedicated_audit_token = os.getenv("AUDIT_GITHUB_TOKEN", "")
+    token = dedicated_audit_token or os.getenv("GITHUB_TOKEN", "")
     api_headers = {
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
@@ -169,7 +170,8 @@ def main() -> int:
                     f"repo:{full_name}:reachable",
                     f"Repository is readable ({target.get('role', 'unspecified')})",
                     False,
-                    f"api_error={code or type(exc).__name__}; details={str(exc)[:240]}; may indicate permissions, rate limit, network, or missing repository",
+                    f"api_error={code or type(exc).__name__}; details={str(exc)[:240]}; "
+                    + ("Set the AUDIT_GITHUB_TOKEN Actions secret with read-only access to this private repository." if code == 404 and not dedicated_audit_token else "Check token permissions, rate limit, network, or repository visibility."),
                     severity="WARN",
                 ))
                 continue
