@@ -16,6 +16,7 @@ on:
 permissions:
   contents: read
   actions: read
+  pull-requests: read
 
 concurrency:
   group: control-plane-audit-${{ github.event.pull_request.number || github.ref }}
@@ -49,6 +50,8 @@ jobs:
 
       - name: Run Daily Ops Audit and generate evidence
         id: daily-ops-audit
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python control-plane/daily_ops_audit.py
 
       - name: Upload Daily Ops Audit report
