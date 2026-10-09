@@ -121,7 +121,7 @@ def main() -> int:
         targets = []
         checks.append(check("portfolio-config", "Repository portfolio configuration is valid", False, f"{type(exc).__name__}: {exc}"))
 
-    token = os.getenv("GITHUB_TOKEN", "")
+    token = os.getenv("AUDIT_GITHUB_TOKEN") or os.getenv("GITHUB_TOKEN", "")
     api_headers = {
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
