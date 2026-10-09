@@ -47,6 +47,9 @@ jobs:
           print(f'Validated {len(actual)} commands')
           PY
 
+      - name: Validate Shortcut Library foundation
+        run: python shortcut-library/tools/audit_library.py
+
       - name: Repository health summary
         run: |
           echo "branch=${GITHUB_REF_NAME}"
