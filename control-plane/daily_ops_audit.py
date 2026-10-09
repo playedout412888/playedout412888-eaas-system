@@ -266,6 +266,7 @@ def main() -> int:
         f"- **Commit:** {result['source']['sha']}",
         f"- **Workflow run:** {result['source']['run_id']} (attempt {result['source']['run_attempt']})",
         f"- **Checks:** {result['summary']['passed']} passed / {result['summary']['failed']} failed / {result['summary']['warnings']} warnings",
+        f"- **Portfolio:** {portfolio_summary['reachable']}/{portfolio_summary['configured']} repositories readable; {portfolio_summary['workflow_failures']} recent workflow failures; {portfolio_summary['without_workflow_history']} repositories without workflow history",
         "",
         "> Scope is repository-local. This report does not verify external deployments, live service health, credentials, or production runtime.",
         "",
@@ -293,6 +294,9 @@ def main() -> int:
 
     print(f"Daily Ops Audit: {result['result']}")
     print(f"Checks: {result['summary']['passed']} passed, {result['summary']['failed']} failed, {result['summary']['warnings']} warnings")
+    print(f"Portfolio: {portfolio_summary['reachable']}/{portfolio_summary['configured']} repositories readable; {portfolio_summary['workflow_failures']} recent workflow failures; {portfolio_summary['without_workflow_history']} without workflow history")
+    for item in checks:
+        print(f"[{item['status']}] {item['id']}: {item['evidence']}")
     print(f"JSON report: {json_path.relative_to(ROOT)}")
     print(f"Markdown report: {md_path.relative_to(ROOT)}")
     return 1 if failures else 0
