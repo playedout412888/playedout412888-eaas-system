@@ -132,8 +132,19 @@ def main() -> int:
 
     def github_get(api_path: str):
         request = Request("https://api.github.com" + api_path, headers=api_headers)
-        with urlopen(request, timeout=12) as response:
-            return json.loads(response.read().decode("utf-8"))
+        try:
+            with urlopen(request, timeout=12) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except HTTPError as exc:
+            # The workflow's built-in GITHUB_TOKEN is repository-scoped. Retry
+            # a 404 anonymously so public cross-repository targets remain auditable.
+            # A private target still returns 404 and is reported as inaccessible.
+            if exc.code != 404 or not token:
+                raise
+            public_headers = {key: value for key, value in api_headers.items() if key != "Authorization"}
+            public_request = Request("https://api.github.com" + api_path, headers=public_headers)
+            with urlopen(public_request, timeout=12) as response:
+                return json.loads(response.read().decode("utf-8"))
 
     if targets:
         for target in targets:
@@ -231,7 +242,7 @@ def main() -> int:
         "schema_version": "1.0.0",
         "audit_type": "daily-ops-control-plane",
         "generated_at": now,
-        "result": "FAIL" if failures else "PASS",
+        "result": "FAIL" if failures else ("DEGRADED" if warnings else "PASS"),
         "scope": "Repository-local controls only; no external deployment, runtime, credential, or production-health claims.",
         "source": {
             "repository": os.getenv("GITHUB_REPOSITORY", "local"),
