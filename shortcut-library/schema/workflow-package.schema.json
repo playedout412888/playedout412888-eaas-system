@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://21amg.example/schemas/workflow-package.schema.json",
+  "$id": "urn:21amg:schema:workflow-package:1.0.0",
   "title": "21amG Workflow Package Manifest",
   "description": "Manifest contract for reusable Shortcut and helper-workflow packages. This schema does not certify an artifact or its test status.",
   "type": "object",
@@ -35,7 +35,7 @@
     },
     "version": {
       "type": "string",
-      "pattern": "^(0|[1-9]\\\\d*)\\\\.(0|[1-9]\\\\d*)\\\\.(0|[1-9]\\\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\\\+[0-9A-Za-z.-]+)?$"
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
     },
     "summary": {
       "type": "string",
