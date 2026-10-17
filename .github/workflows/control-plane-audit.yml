@@ -48,6 +48,9 @@ jobs:
           print(f'Validated {len(actual)} commands')
           PY
 
+      - name: Test Daily Ops Audit failure handling
+        run: python -m unittest discover -s control-plane/tests -v
+
       - name: Run Daily Ops Audit and generate evidence
         id: daily-ops-audit
         env:
