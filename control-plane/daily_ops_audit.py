@@ -247,7 +247,7 @@ def main() -> int:
                     severity="WARN",
                 ))
 
-        failures = [item for item in checks if item["status"] == "FAIL"]
+    failures = [item for item in checks if item["status"] == "FAIL"]
     warnings = [item for item in checks if item["status"] == "WARN"]
     result = {
         "schema_version": "1.0.0",
