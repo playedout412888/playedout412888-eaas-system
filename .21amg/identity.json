@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "organization": "21amG",
+  "organization_type": "parent_platform",
+  "platform": "Nexus",
+  "role": "origin_and_operational_control_plane",
+  "status": "active",
+  "source_of_truth": "github",
+  "historical_provenance": "conversation_and_repository_evidence",
+  "created_by": "21amG",
+  "production_authority": "explicit_authorization_required"
+}
