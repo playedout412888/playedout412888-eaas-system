@@ -1,0 +1,295 @@
+{
+  "schema_version": "1.0.0",
+  "purpose": "Internal taxonomy for planning and cataloging reusable workflow packages. Entries describe areas of opportunity, not completed products.",
+  "lifecycle_states": [
+    "proposed",
+    "specified",
+    "implemented",
+    "tested",
+    "release-candidate",
+    "released",
+    "blocked",
+    "deprecated",
+    "withdrawn"
+  ],
+  "industries": [
+    {
+      "id": "automotive-recovery",
+      "name": "Automotive, Towing & Vehicle Recovery",
+      "priority": "p0",
+      "opportunities": [
+        "dispatch-intake",
+        "tow-ticket-and-invoice",
+        "vehicle-condition-checklist",
+        "storage-and-release-checklist",
+        "customer-status-update",
+        "shift-handoff"
+      ],
+      "safety_notes": [
+        "Respect local and state law, contract terms, consumer-protection rules, privacy, and required notices.",
+        "Do not automate vehicle release, repossession, access, or property disposition without authorized human review."
+      ]
+    },
+    {
+      "id": "software-engineering",
+      "name": "Software Engineering & Repository Operations",
+      "priority": "p0",
+      "opportunities": [
+        "repository-audit",
+        "issue-to-task",
+        "branch-and-change-plan",
+        "test-and-build-validation",
+        "release-readiness",
+        "developer-handoff"
+      ],
+      "safety_notes": [
+        "Use isolated workspaces and least-privilege credentials.",
+        "Never claim a test, build, or deployment passed without captured evidence."
+      ]
+    },
+    {
+      "id": "small-business-operations",
+      "name": "Small Business Operations",
+      "priority": "p0",
+      "opportunities": [
+        "lead-intake",
+        "quote-and-estimate-draft",
+        "appointment-coordination",
+        "invoice-follow-up",
+        "daily-operations-summary",
+        "document-generation"
+      ],
+      "safety_notes": [
+        "Require user review for binding offers, payments, refunds, and customer-facing commitments."
+      ]
+    },
+    {
+      "id": "home-services",
+      "name": "Home Services & Field Service",
+      "priority": "p1",
+      "opportunities": [
+        "service-request-intake",
+        "job-scheduling",
+        "work-order",
+        "before-after-photo-checklist",
+        "parts-and-materials-list",
+        "completion-and-invoice-packet"
+      ],
+      "safety_notes": [
+        "Do not represent estimates as binding prices unless explicitly approved."
+      ]
+    },
+    {
+      "id": "logistics-fleet",
+      "name": "Logistics, Fleet & Transportation",
+      "priority": "p1",
+      "opportunities": [
+        "dispatch-board-update",
+        "vehicle-inspection",
+        "route-exception-report",
+        "maintenance-reminder",
+        "proof-of-delivery-packet"
+      ],
+      "safety_notes": [
+        "Safety-critical vehicle decisions remain subject to qualified human review."
+      ]
+    },
+    {
+      "id": "real-estate-property",
+      "name": "Real Estate & Property Management",
+      "priority": "p1",
+      "opportunities": [
+        "inquiry-intake",
+        "showing-coordination",
+        "maintenance-request",
+        "move-in-move-out-checklist",
+        "document-expiry-reminder"
+      ],
+      "safety_notes": [
+        "Apply fair-housing, privacy, record-retention, and jurisdiction-specific requirements."
+      ]
+    },
+    {
+      "id": "professional-services",
+      "name": "Professional Services & Consulting",
+      "priority": "p1",
+      "opportunities": [
+        "client-onboarding",
+        "meeting-to-action-items",
+        "proposal-draft",
+        "deliverable-checklist",
+        "status-report",
+        "project-closeout"
+      ],
+      "safety_notes": [
+        "Protect confidential client material and require approval of final advice or deliverables."
+      ]
+    },
+    {
+      "id": "marketing-agencies",
+      "name": "Marketing, Creative & Digital Agencies",
+      "priority": "p1",
+      "opportunities": [
+        "creative-brief-intake",
+        "campaign-asset-checklist",
+        "content-repurposing",
+        "approval-routing",
+        "campaign-reporting",
+        "client-handoff"
+      ],
+      "safety_notes": [
+        "Respect copyright, brand permissions, platform policies, and disclosure requirements."
+      ]
+    },
+    {
+      "id": "retail-ecommerce",
+      "name": "Retail & E-commerce",
+      "priority": "p1",
+      "opportunities": [
+        "product-listing-check",
+        "order-exception-triage",
+        "inventory-reconciliation",
+        "returns-request-routing",
+        "catalog-quality-report"
+      ],
+      "safety_notes": [
+        "Refunds, account changes, and customer-data exports require permission checks."
+      ]
+    },
+    {
+      "id": "construction-trades",
+      "name": "Construction & Skilled Trades",
+      "priority": "p1",
+      "opportunities": [
+        "site-visit-checklist",
+        "daily-progress-log",
+        "change-order-draft",
+        "safety-document-check",
+        "subcontractor-document-tracker"
+      ],
+      "safety_notes": [
+        "Never replace required professional judgment, inspections, or safety procedures."
+      ]
+    },
+    {
+      "id": "healthcare-administration",
+      "name": "Healthcare Administration",
+      "priority": "p2",
+      "opportunities": [
+        "nonclinical-intake-routing",
+        "appointment-reminder-draft",
+        "policy-document-control",
+        "inventory-checklist",
+        "administrative-handoff"
+      ],
+      "safety_notes": [
+        "No diagnosis or treatment automation in this catalog. Health information requires appropriate legal, security, and access controls."
+      ]
+    },
+    {
+      "id": "legal-administration",
+      "name": "Legal Operations & Document Administration",
+      "priority": "p2",
+      "opportunities": [
+        "matter-intake-routing",
+        "deadline-tracker",
+        "document-indexing",
+        "signature-packet-check",
+        "matter-closeout-checklist"
+      ],
+      "safety_notes": [
+        "Administrative support only; legal advice, filing decisions, and deadlines require qualified review."
+      ]
+    },
+    {
+      "id": "education-training",
+      "name": "Education & Training",
+      "priority": "p2",
+      "opportunities": [
+        "course-material-checklist",
+        "lesson-preparation",
+        "assignment-rubric-draft",
+        "learner-support-routing",
+        "training-completion-report"
+      ],
+      "safety_notes": [
+        "Protect student data and retain human oversight for consequential decisions."
+      ]
+    },
+    {
+      "id": "finance-administration",
+      "name": "Finance & Bookkeeping Administration",
+      "priority": "p2",
+      "opportunities": [
+        "receipt-capture",
+        "expense-categorization-draft",
+        "reconciliation-exception-list",
+        "invoice-status-report",
+        "month-end-checklist"
+      ],
+      "safety_notes": [
+        "No autonomous money movement, tax filing, lending, or investment decisions without explicit authorization and appropriate review."
+      ]
+    },
+    {
+      "id": "cybersecurity-it",
+      "name": "IT Operations & Cybersecurity",
+      "priority": "p2",
+      "opportunities": [
+        "asset-inventory",
+        "patch-status-report",
+        "incident-intake",
+        "access-review-checklist",
+        "backup-verification-report"
+      ],
+      "safety_notes": [
+        "Defensive and authorized scope only; privilege changes and disruptive actions require approval."
+      ]
+    },
+    {
+      "id": "hospitality-events",
+      "name": "Hospitality & Events",
+      "priority": "p2",
+      "opportunities": [
+        "booking-inquiry-intake",
+        "event-run-of-show",
+        "vendor-confirmation-checklist",
+        "guest-request-routing",
+        "post-event-closeout"
+      ],
+      "safety_notes": [
+        "Protect guest information and require approval before making external commitments."
+      ]
+    },
+    {
+      "id": "nonprofit-community",
+      "name": "Nonprofit & Community Organizations",
+      "priority": "p2",
+      "opportunities": [
+        "volunteer-onboarding",
+        "donation-receipt-workflow",
+        "grant-deadline-tracker",
+        "event-coordination",
+        "impact-report-draft"
+      ],
+      "safety_notes": [
+        "Handle donor and beneficiary data with strict privacy controls."
+      ]
+    },
+    {
+      "id": "creator-media",
+      "name": "Creators, Media & Publishing",
+      "priority": "p2",
+      "opportunities": [
+        "production-checklist",
+        "asset-metadata",
+        "transcript-to-content-draft",
+        "editorial-calendar",
+        "rights-and-release-tracker"
+      ],
+      "safety_notes": [
+        "Verify rights, consent, attribution, and licenses before publishing or distributing assets."
+      ]
+    }
+  ]
+}

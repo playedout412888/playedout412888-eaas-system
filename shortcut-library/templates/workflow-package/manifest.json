@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0.0",
+  "id": "example.workflow-package",
+  "name": "Example Workflow Package",
+  "version": "0.1.0",
+  "summary": "Replace with a concise statement of the workflow's intended outcome and scope.",
+  "industry_ids": [],
+  "lifecycle": "proposed",
+  "maintainer": {
+    "team": "21amG",
+    "contact_route": "internal-maintainer-channel",
+    "support_tier": "internal"
+  },
+  "workflow": {
+    "entrypoint": "workflow/main.json",
+    "helpers": [],
+    "input_contract": "workflow/contracts/input.schema.json",
+    "output_contract": "workflow/contracts/output.schema.json",
+    "idempotency_strategy": "Define how duplicate execution is detected or safely handled.",
+    "checkpoint_strategy": "Define which safe state is persisted and how execution resumes."
+  },
+  "compatibility": {
+    "platforms": [
+      "cli"
+    ],
+    "minimum_versions": {},
+    "languages": [],
+    "frameworks": [],
+    "execution_requirements": []
+  },
+  "permissions": {
+    "filesystem": "scoped-write",
+    "network": "none",
+    "secrets": "none",
+    "external_side_effects": [],
+    "approval_required": [
+      "Any destructive action",
+      "Any externally consequential action"
+    ]
+  },
+  "dependencies": [],
+  "configuration": [],
+  "validation": {
+    "status": "not-run",
+    "test_suites": [],
+    "evidence": [],
+    "known_limitations": [
+      "Template only; not an executable or tested release."
+    ]
+  },
+  "distribution": {
+    "targets": [
+      "internal"
+    ],
+    "artifact_paths": [],
+    "license_id": "UNDECIDED",
+    "catalog_visibility": "internal"
+  }
+}

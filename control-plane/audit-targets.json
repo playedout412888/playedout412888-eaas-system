@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "purpose": "Explicit repository portfolio scope for Daily Ops Audit. Targets are audited read-only; this file grants no write or deployment permission.",
+  "repositories": [
+    {
+      "full_name": "playedout412888/playedout412888-eaas-system",
+      "role": "control-plane"
+    },
+    {
+      "full_name": "playedout412888/website",
+      "role": "website"
+    },
+    {
+      "full_name": "playedout412888/omnimind-control-plane",
+      "role": "control-plane-prototype"
+    },
+    {
+      "full_name": "playedout412888/Newisholdy",
+      "role": "application-prototype"
+    },
+    {
+      "full_name": "playedout412888/fitzgeralds-recovery-v1",
+      "role": "recovery-application"
+    },
+    {
+      "full_name": "playedout412888/fitzgeralds-repo.v1",
+      "role": "repository-prototype"
+    },
+    {
+      "full_name": "playedout412888/cp--r-agent-swarm-platform-auto-deploy-agent-swarm-platform-cd-agent-swarm-platform-",
+      "role": "agent-swarm-prototype"
+    }
+  ]
+}
