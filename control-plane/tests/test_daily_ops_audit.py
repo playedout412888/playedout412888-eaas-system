@@ -71,5 +71,33 @@ class EmptyPortfolioConfigurationTests(unittest.TestCase):
         self.assertTrue(any(c["id"] == "portfolio-config" and c["status"] == "FAIL" for c in report["checks"]))
 
 
+class ActiveWorkflowFilteringTests(unittest.TestCase):
+    def test_retired_workflow_failure_is_not_a_current_failure(self) -> None:
+        runs = [
+            {"workflow_id": 10, "name": "Current CI", "conclusion": "success"},
+            {"workflow_id": 20, "name": "Retired repair workflow", "conclusion": "failure"},
+            {"workflow_id": 20, "name": "Retired repair workflow", "conclusion": "failure"},
+        ]
+        active_runs, ignored_count = daily_ops_audit.filter_active_workflow_runs(runs, {10})
+        self.assertEqual([run["workflow_id"] for run in active_runs], [10])
+        self.assertEqual(ignored_count, 1)
+
+    def test_active_workflow_failure_is_preserved(self) -> None:
+        runs = [
+            {"workflow_id": 10, "name": "Current CI", "conclusion": "failure"},
+            {"workflow_id": 20, "name": "Retired repair workflow", "conclusion": "failure"},
+        ]
+        active_runs, ignored_count = daily_ops_audit.filter_active_workflow_runs(runs, {10})
+        self.assertEqual(len(active_runs), 1)
+        self.assertEqual(active_runs[0]["conclusion"], "failure")
+        self.assertEqual(ignored_count, 1)
+
+    def test_malformed_workflow_id_is_ignored_safely(self) -> None:
+        runs = [{"workflow_id": None, "name": "Unknown workflow", "conclusion": "failure"}]
+        active_runs, ignored_count = daily_ops_audit.filter_active_workflow_runs(runs, {10})
+        self.assertEqual(active_runs, [])
+        self.assertEqual(ignored_count, 0)
+
+
 if __name__ == "__main__":
     unittest.main()
