@@ -30,6 +30,27 @@ def check(check_id: str, description: str, passed: bool, evidence: str, severity
     }
 
 
+def filter_active_workflow_runs(runs: list[dict], active_workflow_ids: set[int]) -> tuple[list[dict], int]:
+    """Keep runs for workflows currently enabled on the repository.
+
+    Historical runs from deleted or disabled workflows are retained in the
+    audit evidence count, but cannot create a current CI failure.
+    """
+    active_runs = []
+    inactive_ids: set[int] = set()
+    for run in runs:
+        workflow_id = run.get("workflow_id")
+        try:
+            normalized_id = int(workflow_id)
+        except (TypeError, ValueError):
+            continue
+        if normalized_id in active_workflow_ids:
+            active_runs.append(run)
+        else:
+            inactive_ids.add(normalized_id)
+    return active_runs, len(inactive_ids)
+
+
 def main() -> int:
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     checks: list[dict] = []
@@ -186,8 +207,16 @@ def main() -> int:
                 continue
 
             try:
-                payload = github_get(f"/repos/{full_name}/actions/runs?per_page=30")
+                workflow_payload = github_get(f"/repos/{full_name}/actions/workflows?per_page=100")
+                workflow_items = workflow_payload.get("workflows", []) if isinstance(workflow_payload, dict) else []
+                active_workflow_ids = {
+                    int(workflow["id"])
+                    for workflow in workflow_items
+                    if workflow.get("state") == "active" and workflow.get("id") is not None
+                }
+                payload = github_get(f"/repos/{full_name}/actions/runs?per_page=100")
                 runs = payload.get("workflow_runs", []) if isinstance(payload, dict) else []
+                runs, inactive_workflow_count = filter_active_workflow_runs(runs, active_workflow_ids)
                 latest_by_workflow = {}
                 for run in runs:
                     workflow_id = run.get("workflow_id", run.get("name", "unknown"))
@@ -226,7 +255,8 @@ def main() -> int:
                 if recent_failures:
                     portfolio_summary["workflow_failures"] += len(recent_failures)
                 evidence = (
-                    f"latest_workflows_checked={len(latest_by_workflow)}; "
+                    f"active_workflows_checked={len(latest_by_workflow)}; "
+                    f"inactive_or_retired_workflows_ignored={inactive_workflow_count}; "
                     f"recent_failures={json.dumps(recent_failures, separators=(',', ':'))}; "
                     f"recent_unknown={json.dumps(recent_unknown, separators=(',', ':'))}"
                 )
