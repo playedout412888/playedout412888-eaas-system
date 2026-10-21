@@ -71,6 +71,29 @@ class EmptyPortfolioConfigurationTests(unittest.TestCase):
         self.assertTrue(any(c["id"] == "portfolio-config" and c["status"] == "FAIL" for c in report["checks"]))
 
 
+class ActiveWorkflowDefinitionTests(unittest.TestCase):
+    def test_deleted_workflow_file_is_not_considered_active(self) -> None:
+        workflows = [
+            {"id": 10, "state": "active", "path": ".github/workflows/test.yml"},
+            {"id": 20, "state": "active", "path": ".github/workflows/removed-repair.yml"},
+            {"id": 30, "state": "disabled_manually", "path": ".github/workflows/disabled.yml"},
+        ]
+        active_ids = daily_ops_audit.active_workflow_ids_from_definitions(
+            workflows, {".github/workflows/test.yml"}
+        )
+        self.assertEqual(active_ids, {10})
+
+    def test_invalid_workflow_definition_is_ignored(self) -> None:
+        workflows = [
+            {"id": "not-an-id", "state": "active", "path": ".github/workflows/test.yml"},
+            {"id": 10, "state": "active", "path": ".github/workflows/test.yml"},
+        ]
+        active_ids = daily_ops_audit.active_workflow_ids_from_definitions(
+            workflows, {".github/workflows/test.yml"}
+        )
+        self.assertEqual(active_ids, {10})
+
+
 class ActiveWorkflowFilteringTests(unittest.TestCase):
     def test_retired_workflow_failure_is_not_a_current_failure(self) -> None:
         runs = [
