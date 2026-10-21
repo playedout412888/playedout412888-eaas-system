@@ -30,8 +30,21 @@ def check(check_id: str, description: str, passed: bool, evidence: str, severity
     }
 
 
+def active_workflow_ids_from_definitions(workflows: list[dict], tracked_paths: set[str]) -> set[int]:
+    """Return IDs for enabled workflows whose files still exist on the default branch."""
+    active_ids: set[int] = set()
+    for workflow in workflows:
+        if workflow.get("state") != "active" or workflow.get("path") not in tracked_paths:
+            continue
+        try:
+            active_ids.add(int(workflow["id"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+    return active_ids
+
+
 def filter_active_workflow_runs(runs: list[dict], active_workflow_ids: set[int]) -> tuple[list[dict], int]:
-    """Keep runs for workflows currently enabled on the repository.
+    """Keep runs for workflows enabled and present on the repository's default branch.
 
     Historical runs from deleted or disabled workflows are retained in the
     audit evidence count, but cannot create a current CI failure.
@@ -209,11 +222,17 @@ def main() -> int:
             try:
                 workflow_payload = github_get(f"/repos/{full_name}/actions/workflows?per_page=100")
                 workflow_items = workflow_payload.get("workflows", []) if isinstance(workflow_payload, dict) else []
-                active_workflow_ids = {
-                    int(workflow["id"])
-                    for workflow in workflow_items
-                    if workflow.get("state") == "active" and workflow.get("id") is not None
-                }
+                workflow_files_payload = github_get(
+                    f"/repos/{full_name}/contents/.github/workflows?ref={default_branch}"
+                )
+                workflow_paths = {
+                    item.get("path")
+                    for item in workflow_files_payload
+                    if isinstance(item, dict)
+                    and item.get("type") == "file"
+                    and str(item.get("path", "")).endswith((".yml", ".yaml"))
+                } if isinstance(workflow_files_payload, list) else set()
+                active_workflow_ids = active_workflow_ids_from_definitions(workflow_items, workflow_paths)
                 payload = github_get(f"/repos/{full_name}/actions/runs?per_page=100")
                 runs = payload.get("workflow_runs", []) if isinstance(payload, dict) else []
                 runs, inactive_workflow_count = filter_active_workflow_runs(runs, active_workflow_ids)
@@ -256,6 +275,7 @@ def main() -> int:
                     portfolio_summary["workflow_failures"] += len(recent_failures)
                 evidence = (
                     f"active_workflows_checked={len(latest_by_workflow)}; "
+                    f"default_branch_workflow_files={len(workflow_paths)}; "
                     f"inactive_or_retired_workflows_ignored={inactive_workflow_count}; "
                     f"recent_failures={json.dumps(recent_failures, separators=(',', ':'))}; "
                     f"recent_unknown={json.dumps(recent_unknown, separators=(',', ':'))}"
