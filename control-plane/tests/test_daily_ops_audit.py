@@ -71,6 +71,32 @@ class EmptyPortfolioConfigurationTests(unittest.TestCase):
         self.assertTrue(any(c["id"] == "portfolio-config" and c["status"] == "FAIL" for c in report["checks"]))
 
 
+class WorkflowInventoryPaginationTests(unittest.TestCase):
+    def test_fetches_all_pages_of_workflow_definitions(self) -> None:
+        pages = {
+            1: {"workflows": [{"id": index} for index in range(100)]},
+            2: {"workflows": [{"id": 101}]},
+        }
+        requested: list[str] = []
+
+        def fake_github_get(path: str) -> dict:
+            requested.append(path)
+            page = int(path.rsplit("page=", 1)[1])
+            return pages[page]
+
+        workflows = daily_ops_audit.fetch_all_workflow_definitions(fake_github_get, "owner/repo")
+        self.assertEqual(len(workflows), 101)
+        self.assertIn("?per_page=100&page=1", requested[0])
+        self.assertIn("?per_page=100&page=2", requested[1])
+
+    def test_workflow_file_lookup_encodes_reserved_branch_characters(self) -> None:
+        path = daily_ops_audit.workflow_files_api_path("owner/repo", "release#2026")
+        self.assertEqual(
+            path,
+            "/repos/owner/repo/contents/.github/workflows?ref=release%232026",
+        )
+
+
 class ActiveWorkflowDefinitionTests(unittest.TestCase):
     def test_deleted_workflow_file_is_not_considered_active(self) -> None:
         workflows = [
