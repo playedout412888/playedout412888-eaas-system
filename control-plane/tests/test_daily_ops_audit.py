@@ -71,5 +71,104 @@ class EmptyPortfolioConfigurationTests(unittest.TestCase):
         self.assertTrue(any(c["id"] == "portfolio-config" and c["status"] == "FAIL" for c in report["checks"]))
 
 
+class WorkflowFileLookupTests(unittest.TestCase):
+    def test_missing_public_workflow_directory_is_treated_as_empty(self) -> None:
+        from urllib.error import HTTPError
+
+        def missing_directory(_path: str) -> dict:
+            raise HTTPError("https://api.github.com/repos/owner/repo/contents/.github/workflows", 404, "Not Found", None, None)
+
+        self.assertEqual(
+            daily_ops_audit.fetch_workflow_file_paths(missing_directory, "owner/repo", "main", "public"),
+            set(),
+        )
+
+    def test_missing_private_workflow_directory_remains_an_error(self) -> None:
+        from urllib.error import HTTPError
+
+        def missing_directory(_path: str) -> dict:
+            raise HTTPError("https://api.github.com/repos/owner/repo/contents/.github/workflows", 404, "Not Found", None, None)
+
+        with self.assertRaises(HTTPError):
+            daily_ops_audit.fetch_workflow_file_paths(missing_directory, "owner/repo", "main", "private")
+
+
+class WorkflowInventoryPaginationTests(unittest.TestCase):
+    def test_fetches_all_pages_of_workflow_definitions(self) -> None:
+        pages = {
+            1: {"workflows": [{"id": index} for index in range(100)]},
+            2: {"workflows": [{"id": 101}]},
+        }
+        requested: list[str] = []
+
+        def fake_github_get(path: str) -> dict:
+            requested.append(path)
+            page = int(path.rsplit("page=", 1)[1])
+            return pages[page]
+
+        workflows = daily_ops_audit.fetch_all_workflow_definitions(fake_github_get, "owner/repo")
+        self.assertEqual(len(workflows), 101)
+        self.assertIn("?per_page=100&page=1", requested[0])
+        self.assertIn("?per_page=100&page=2", requested[1])
+
+    def test_workflow_file_lookup_encodes_reserved_branch_characters(self) -> None:
+        path = daily_ops_audit.workflow_files_api_path("owner/repo", "release#2026")
+        self.assertEqual(
+            path,
+            "/repos/owner/repo/contents/.github/workflows?ref=release%232026",
+        )
+
+
+class ActiveWorkflowDefinitionTests(unittest.TestCase):
+    def test_deleted_workflow_file_is_not_considered_active(self) -> None:
+        workflows = [
+            {"id": 10, "state": "active", "path": ".github/workflows/test.yml"},
+            {"id": 20, "state": "active", "path": ".github/workflows/removed-repair.yml"},
+            {"id": 30, "state": "disabled_manually", "path": ".github/workflows/disabled.yml"},
+        ]
+        active_ids = daily_ops_audit.active_workflow_ids_from_definitions(
+            workflows, {".github/workflows/test.yml"}
+        )
+        self.assertEqual(active_ids, {10})
+
+    def test_invalid_workflow_definition_is_ignored(self) -> None:
+        workflows = [
+            {"id": "not-an-id", "state": "active", "path": ".github/workflows/test.yml"},
+            {"id": 10, "state": "active", "path": ".github/workflows/test.yml"},
+        ]
+        active_ids = daily_ops_audit.active_workflow_ids_from_definitions(
+            workflows, {".github/workflows/test.yml"}
+        )
+        self.assertEqual(active_ids, {10})
+
+
+class ActiveWorkflowFilteringTests(unittest.TestCase):
+    def test_retired_workflow_failure_is_not_a_current_failure(self) -> None:
+        runs = [
+            {"workflow_id": 10, "name": "Current CI", "conclusion": "success"},
+            {"workflow_id": 20, "name": "Retired repair workflow", "conclusion": "failure"},
+            {"workflow_id": 20, "name": "Retired repair workflow", "conclusion": "failure"},
+        ]
+        active_runs, ignored_count = daily_ops_audit.filter_active_workflow_runs(runs, {10})
+        self.assertEqual([run["workflow_id"] for run in active_runs], [10])
+        self.assertEqual(ignored_count, 1)
+
+    def test_active_workflow_failure_is_preserved(self) -> None:
+        runs = [
+            {"workflow_id": 10, "name": "Current CI", "conclusion": "failure"},
+            {"workflow_id": 20, "name": "Retired repair workflow", "conclusion": "failure"},
+        ]
+        active_runs, ignored_count = daily_ops_audit.filter_active_workflow_runs(runs, {10})
+        self.assertEqual(len(active_runs), 1)
+        self.assertEqual(active_runs[0]["conclusion"], "failure")
+        self.assertEqual(ignored_count, 1)
+
+    def test_malformed_workflow_id_is_ignored_safely(self) -> None:
+        runs = [{"workflow_id": None, "name": "Unknown workflow", "conclusion": "failure"}]
+        active_runs, ignored_count = daily_ops_audit.filter_active_workflow_runs(runs, {10})
+        self.assertEqual(active_runs, [])
+        self.assertEqual(ignored_count, 0)
+
+
 if __name__ == "__main__":
     unittest.main()

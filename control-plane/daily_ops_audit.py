@@ -13,6 +13,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,6 +29,75 @@ def check(check_id: str, description: str, passed: bool, evidence: str, severity
         "description": description,
         "evidence": evidence,
     }
+
+
+def active_workflow_ids_from_definitions(workflows: list[dict], tracked_paths: set[str]) -> set[int]:
+    """Return IDs for enabled workflows whose files still exist on the default branch."""
+    active_ids: set[int] = set()
+    for workflow in workflows:
+        if workflow.get("state") != "active" or workflow.get("path") not in tracked_paths:
+            continue
+        try:
+            active_ids.add(int(workflow["id"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+    return active_ids
+
+
+def fetch_all_workflow_definitions(github_get, full_name: str) -> list[dict]:
+    """Fetch every page of workflow definitions so active workflows cannot be missed."""
+    workflows: list[dict] = []
+    page = 1
+    while True:
+        payload = github_get(f"/repos/{full_name}/actions/workflows?per_page=100&page={page}")
+        items = payload.get("workflows", []) if isinstance(payload, dict) else []
+        workflows.extend(items)
+        if len(items) < 100:
+            return workflows
+        page += 1
+
+
+def workflow_files_api_path(full_name: str, default_branch: str) -> str:
+    """Build the workflow directory API path with a safely encoded branch ref."""
+    return f"/repos/{full_name}/contents/.github/workflows?{urlencode({'ref': default_branch})}"
+
+
+def fetch_workflow_file_paths(github_get, full_name: str, default_branch: str, visibility: str) -> set[str]:
+    """Read workflow files; a missing directory in a public repo means no workflow files."""
+    try:
+        payload = github_get(workflow_files_api_path(full_name, default_branch))
+    except HTTPError as exc:
+        if exc.code == 404 and visibility == "public":
+            return set()
+        raise
+    return {
+        item.get("path")
+        for item in payload
+        if isinstance(item, dict)
+        and item.get("type") == "file"
+        and str(item.get("path", "")).endswith((".yml", ".yaml"))
+    } if isinstance(payload, list) else set()
+
+
+def filter_active_workflow_runs(runs: list[dict], active_workflow_ids: set[int]) -> tuple[list[dict], int]:
+    """Keep runs for workflows enabled and present on the repository's default branch.
+
+    Historical runs from deleted or disabled workflows are retained in the
+    audit evidence count, but cannot create a current CI failure.
+    """
+    active_runs = []
+    inactive_ids: set[int] = set()
+    for run in runs:
+        workflow_id = run.get("workflow_id")
+        try:
+            normalized_id = int(workflow_id)
+        except (TypeError, ValueError):
+            continue
+        if normalized_id in active_workflow_ids:
+            active_runs.append(run)
+        else:
+            inactive_ids.add(normalized_id)
+    return active_runs, len(inactive_ids)
 
 
 def main() -> int:
@@ -186,8 +256,14 @@ def main() -> int:
                 continue
 
             try:
-                payload = github_get(f"/repos/{full_name}/actions/runs?per_page=30")
+                workflow_items = fetch_all_workflow_definitions(github_get, full_name)
+                workflow_paths = fetch_workflow_file_paths(
+                    github_get, full_name, default_branch, repo_info.get("visibility", "unknown")
+                )
+                active_workflow_ids = active_workflow_ids_from_definitions(workflow_items, workflow_paths)
+                payload = github_get(f"/repos/{full_name}/actions/runs?per_page=100")
                 runs = payload.get("workflow_runs", []) if isinstance(payload, dict) else []
+                runs, inactive_workflow_count = filter_active_workflow_runs(runs, active_workflow_ids)
                 latest_by_workflow = {}
                 for run in runs:
                     workflow_id = run.get("workflow_id", run.get("name", "unknown"))
@@ -226,7 +302,9 @@ def main() -> int:
                 if recent_failures:
                     portfolio_summary["workflow_failures"] += len(recent_failures)
                 evidence = (
-                    f"latest_workflows_checked={len(latest_by_workflow)}; "
+                    f"active_workflows_checked={len(latest_by_workflow)}; "
+                    f"default_branch_workflow_files={len(workflow_paths)}; "
+                    f"inactive_or_retired_workflows_ignored={inactive_workflow_count}; "
                     f"recent_failures={json.dumps(recent_failures, separators=(',', ':'))}; "
                     f"recent_unknown={json.dumps(recent_unknown, separators=(',', ':'))}"
                 )
