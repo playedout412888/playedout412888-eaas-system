@@ -13,6 +13,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -220,10 +221,21 @@ def main() -> int:
                 continue
 
             try:
-                workflow_payload = github_get(f"/repos/{full_name}/actions/workflows?per_page=100")
-                workflow_items = workflow_payload.get("workflows", []) if isinstance(workflow_payload, dict) else []
+                workflow_items = []
+                workflow_page = 1
+                while True:
+                    workflow_payload = github_get(
+                        f"/repos/{full_name}/actions/workflows?per_page=100&page={workflow_page}"
+                    )
+                    page_items = workflow_payload.get("workflows", []) if isinstance(workflow_payload, dict) else []
+                    workflow_items.extend(page_items)
+                    if len(page_items) < 100:
+                        break
+                    workflow_page += 1
+
+                workflow_ref = urlencode({"ref": default_branch})
                 workflow_files_payload = github_get(
-                    f"/repos/{full_name}/contents/.github/workflows?ref={default_branch}"
+                    f"/repos/{full_name}/contents/.github/workflows?{workflow_ref}"
                 )
                 workflow_paths = {
                     item.get("path")
