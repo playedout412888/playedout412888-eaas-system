@@ -62,6 +62,23 @@ def workflow_files_api_path(full_name: str, default_branch: str) -> str:
     return f"/repos/{full_name}/contents/.github/workflows?{urlencode({'ref': default_branch})}"
 
 
+def fetch_workflow_file_paths(github_get, full_name: str, default_branch: str, visibility: str) -> set[str]:
+    """Read workflow files; a missing directory in a public repo means no workflow files."""
+    try:
+        payload = github_get(workflow_files_api_path(full_name, default_branch))
+    except HTTPError as exc:
+        if exc.code == 404 and visibility == "public":
+            return set()
+        raise
+    return {
+        item.get("path")
+        for item in payload
+        if isinstance(item, dict)
+        and item.get("type") == "file"
+        and str(item.get("path", "")).endswith((".yml", ".yaml"))
+    } if isinstance(payload, list) else set()
+
+
 def filter_active_workflow_runs(runs: list[dict], active_workflow_ids: set[int]) -> tuple[list[dict], int]:
     """Keep runs for workflows enabled and present on the repository's default branch.
 
@@ -240,14 +257,9 @@ def main() -> int:
 
             try:
                 workflow_items = fetch_all_workflow_definitions(github_get, full_name)
-                workflow_files_payload = github_get(workflow_files_api_path(full_name, default_branch))
-                workflow_paths = {
-                    item.get("path")
-                    for item in workflow_files_payload
-                    if isinstance(item, dict)
-                    and item.get("type") == "file"
-                    and str(item.get("path", "")).endswith((".yml", ".yaml"))
-                } if isinstance(workflow_files_payload, list) else set()
+                workflow_paths = fetch_workflow_file_paths(
+                    github_get, full_name, default_branch, repo_info.get("visibility", "unknown")
+                )
                 active_workflow_ids = active_workflow_ids_from_definitions(workflow_items, workflow_paths)
                 payload = github_get(f"/repos/{full_name}/actions/runs?per_page=100")
                 runs = payload.get("workflow_runs", []) if isinstance(payload, dict) else []
