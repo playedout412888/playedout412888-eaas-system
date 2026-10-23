@@ -44,6 +44,24 @@ def active_workflow_ids_from_definitions(workflows: list[dict], tracked_paths: s
     return active_ids
 
 
+def fetch_all_workflow_definitions(github_get, full_name: str) -> list[dict]:
+    """Fetch every page of workflow definitions so active workflows cannot be missed."""
+    workflows: list[dict] = []
+    page = 1
+    while True:
+        payload = github_get(f"/repos/{full_name}/actions/workflows?per_page=100&page={page}")
+        items = payload.get("workflows", []) if isinstance(payload, dict) else []
+        workflows.extend(items)
+        if len(items) < 100:
+            return workflows
+        page += 1
+
+
+def workflow_files_api_path(full_name: str, default_branch: str) -> str:
+    """Build the workflow directory API path with a safely encoded branch ref."""
+    return f"/repos/{full_name}/contents/.github/workflows?{urlencode({'ref': default_branch})}"
+
+
 def filter_active_workflow_runs(runs: list[dict], active_workflow_ids: set[int]) -> tuple[list[dict], int]:
     """Keep runs for workflows enabled and present on the repository's default branch.
 
@@ -221,22 +239,8 @@ def main() -> int:
                 continue
 
             try:
-                workflow_items = []
-                workflow_page = 1
-                while True:
-                    workflow_payload = github_get(
-                        f"/repos/{full_name}/actions/workflows?per_page=100&page={workflow_page}"
-                    )
-                    page_items = workflow_payload.get("workflows", []) if isinstance(workflow_payload, dict) else []
-                    workflow_items.extend(page_items)
-                    if len(page_items) < 100:
-                        break
-                    workflow_page += 1
-
-                workflow_ref = urlencode({"ref": default_branch})
-                workflow_files_payload = github_get(
-                    f"/repos/{full_name}/contents/.github/workflows?{workflow_ref}"
-                )
+                workflow_items = fetch_all_workflow_definitions(github_get, full_name)
+                workflow_files_payload = github_get(workflow_files_api_path(full_name, default_branch))
                 workflow_paths = {
                     item.get("path")
                     for item in workflow_files_payload
